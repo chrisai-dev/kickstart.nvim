@@ -30,6 +30,7 @@ return {
           if file then
             vim.cmd('Gedit ' .. file)
             vim.cmd('Gdiffsplit')
+            vim.cmd('wincmd l')
           end
         end, { buffer = true, desc = 'Open diff for file' })
       end,
