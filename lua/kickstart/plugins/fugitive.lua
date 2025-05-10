@@ -11,7 +11,11 @@ return {
     vim.keymap.set('n', '<leader>gl', ':Git pull<CR>', { desc = '[G]it [L]oad/Pull' })
     vim.keymap.set('n', '<leader>gb', ':Git blame<CR>', { desc = '[G]it [B]lame' })
     vim.keymap.set('n', '<leader>gq', cleanup_git_buffers, { desc = '[G]it [Q]uit and cleanup' })
-    vim.keymap.set('x', '<C-r>', ':diffget<CR>', { desc = '[R]evert selected diff' })
+    vim.keymap.set('x', '<C-r>', function()
+      vim.cmd('diffget')
+      vim.cmd('write')     -- save it to Git index
+    end, { desc = '[R]evert selected diff' })
+
     vim.keymap.set('x', '<C-s>', function()
       vim.cmd('diffput')
       vim.cmd('wincmd h')  -- move to the staged/index buffer
