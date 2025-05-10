@@ -12,11 +12,18 @@ return {
     vim.keymap.set('n', '<leader>gb', ':Git blame<CR>', { desc = '[G]it [B]lame' })
     vim.keymap.set('n', '<leader>gq', cleanup_git_buffers, { desc = '[G]it [Q]uit and cleanup' })
     vim.keymap.set('x', '<C-r>', ':diffget<CR>', { desc = '[R]evert selected diff' })
+    vim.keymap.set('x', '<C-s>', function()
+      vim.cmd('diffput')
+      vim.cmd('wincmd h')  -- move to the staged/index buffer
+      vim.cmd('write')     -- save it to Git index
+      vim.cmd('wincmd l')  -- go back to the working buffer
+    end, { desc = '[S]tage selected diff' })
 
     -- Diff open on Enter in :Git
     vim.api.nvim_create_autocmd('FileType', {
       pattern = 'fugitive',
       callback = function()
+        vim.cmd('resize 15')  -- Set the height to 15 lines, adjust as desired
         vim.keymap.set('n', '<CR>', function()
           local line = vim.fn.getline('.')
           local file = line:match('%s+([^%s]+)$')
