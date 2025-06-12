@@ -207,6 +207,16 @@ vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper win
 -- vim.keymap.set("n", "<C-S-j>", "<C-w>J", { desc = "Move window to the lower" })
 -- vim.keymap.set("n", "<C-S-k>", "<C-w>K", { desc = "Move window to the upper" })
 
+-- my keymaps
+vim.keymap.set('n', '<C-u>', '<C-u>zz', { desc = 'Move half page up and center' })
+vim.keymap.set('n', '<C-d>', '<C-d>zz', { desc = 'Move half page down and center' })
+vim.keymap.set('n', '{', '{zz', { desc = 'Jump to previous block start and center' })
+vim.keymap.set('n', '}', '}zz', { desc = 'Jump to previous block end and center' })
+
+vim.keymap.set('x', '<Tab>', '>gv', { desc = 'Indent right and reselect' })
+vim.keymap.set('x', '<S-Tab>', '<gv', { desc = 'Indent left and reselect' })
+vim.keymap.set('n', '<C-a>', "maggVGy`a", { desc = 'Yank All (entire buffer, no move)' })
+
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
 
@@ -218,6 +228,17 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
   callback = function()
     vim.highlight.on_yank()
+  end,
+})
+
+-- autosaving
+vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
+  pattern = "*",
+  callback = function()
+    local buftype = vim.api.nvim_buf_get_option(0, "buftype")
+    if buftype == "" then  -- only save if it's a normal file buffer
+      vim.cmd("silent! write")
+    end
   end,
 })
 
@@ -688,7 +709,7 @@ require('lazy').setup({
         --    https://github.com/pmizio/typescript-tools.nvim
         --
         -- But for many setups, the LSP (`ts_ls`) will work just fine
-        -- ts_ls = {},
+        ts_ls = {},
         --
 
         lua_ls = {
@@ -856,7 +877,7 @@ require('lazy').setup({
         },
         transparent_background = false, -- disables setting the background color.
         show_end_of_buffer = false, -- shows the '~' characters after the end of buffers
-        term_colors = false, -- sets terminal colors (e.g. `g:terminal_color_0`)
+        term_colors = true, -- sets terminal colors (e.g. `g:terminal_color_0`)
         dim_inactive = {
             enabled = false, -- dims the background color of inactive window
             shade = "dark",
