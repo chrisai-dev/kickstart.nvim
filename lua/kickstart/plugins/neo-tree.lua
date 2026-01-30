@@ -20,6 +20,10 @@ return {
           ['\\'] = 'close_window',
         },
       },
+      follow_current_file = {
+        enabled = false,  -- disables following the current file
+        leave_dirs_open = false,  -- don't auto-close parent folders
+      }, 
     },
     event_handlers = {
       {

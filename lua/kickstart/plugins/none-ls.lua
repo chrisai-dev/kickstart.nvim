@@ -1,47 +1,31 @@
+-- Remote Python LSP client configuration
+-- Connects to pylsp running in Docker container on port 2087
 return {
-  'nvimtools/none-ls.nvim',
-  dependencies = {
-    'nvimtools/none-ls-extras.nvim',
-    'jayp0521/mason-null-ls.nvim',
-  },
+  'neovim/nvim-lspconfig',
   config = function()
-    local null_ls = require 'null-ls'
-    local formatting = null_ls.builtins.formatting
-    local diagnostics = null_ls.builtins.diagnostics
+    local lspconfig = require 'lspconfig'
+    local configs = require 'lspconfig.configs'
 
-    -- Set up mason-null-ls to install tools used by null-ls
-    require('mason-null-ls').setup {
-      ensure_installed = {
-        'black',
-        'isort',
-        'flake8',
-        'checkmake',
-        'prettier',
-        'stylua',
-        'eslint_d',
-        'shfmt',
-      },
-      automatic_installation = true,
-    }
-
-    local sources = {
-      -- 🔧 Python tools from pre-commit
-      formatting.black.with { extra_args = { '--fast' } },
-      formatting.isort.with { extra_args = { '--settings-path=pyproject.toml' } },
-      diagnostics.flake8,
-
-      -- Other formatters/linters you already use
-      formatting.stylua,
-      formatting.prettier.with { filetypes = { 'html', 'json', 'yaml', 'markdown' } },
-      formatting.shfmt.with { args = { '-i', '4' } },
-      formatting.terraform_fmt,
-      diagnostics.checkmake,
-    }
+    -- Define custom remote pylsp configuration
+    if not configs.remote_pylsp then
+      configs.remote_pylsp = {
+        default_config = {
+          cmd = vim.lsp.rpc.connect('127.0.0.1', 2087),
+          filetypes = { 'python' },
+          root_dir = function(fname)
+            return lspconfig.util.root_pattern('.git', 'setup.py', 'pyproject.toml', 'setup.cfg')(fname)
+              or lspconfig.util.path.dirname(fname)
+          end,
+          settings = {},
+        },
+      }
+    end
 
     -- Format on save
     local augroup = vim.api.nvim_create_augroup('LspFormatting', {})
-    null_ls.setup {
-      sources = sources,
+
+    -- Setup the remote pylsp
+    lspconfig.remote_pylsp.setup {
       on_attach = function(client, bufnr)
         if client.supports_method 'textDocument/formatting' then
           vim.api.nvim_clear_autocmds { group = augroup, buffer = bufnr }
@@ -54,6 +38,19 @@ return {
           })
         end
       end,
+      settings = {
+        pylsp = {
+          plugins = {
+            ruff = {
+              executable = '/usr/local/bin/ruff',
+            },
+            pylsp_mypy = {
+              enabled = true,
+              live_mode = true,
+            },
+          },
+        },
+      },
     }
   end,
 }
