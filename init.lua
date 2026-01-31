@@ -100,6 +100,7 @@ vim.g.maplocalleader = ' '
 -- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = true
 
+-- Clipboard configuration using OSC 52
 vim.g.clipboard = {
   name = "OSC 52",
   copy = {
@@ -219,7 +220,11 @@ vim.keymap.set('n', '}', '}zz', { desc = 'Jump to previous block end and center'
 
 vim.keymap.set('x', '<Tab>', '>gv', { desc = 'Indent right and reselect' })
 vim.keymap.set('x', '<S-Tab>', '<gv', { desc = 'Indent left and reselect' })
-vim.keymap.set('n', '<C-a>', "maggVGy`a", { desc = 'Yank All (entire buffer, no move)' })
+vim.keymap.set('n', '<C-a>', "maggVG\"+y", { desc = 'Yank All (entire buffer, no move)' })
+
+vim.keymap.set('n', '<S-l>', ':bnext<CR>', { desc = 'Next buffer' })
+vim.keymap.set('n', '<S-h>', ':bprev<CR>', { desc = 'Previous buffer' })
+vim.keymap.set('n', '<leader>x', ':bdelete<CR>', { desc = 'Close buffer' })
 
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
@@ -271,6 +276,98 @@ vim.opt.rtp:prepend(lazypath)
 -- NOTE: Here is where you install your plugins.
 require('lazy').setup({
   -- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
+
+  {
+		"ThePrimeagen/99",
+		config = function()
+			local _99 = require("99")
+
+            -- For logging that is to a file if you wish to trace through requests
+            -- for reporting bugs, i would not rely on this, but instead the provided
+            -- logging mechanisms within 99.  This is for more debugging purposes
+            local cwd = vim.uv.cwd()
+            local basename = vim.fs.basename(cwd)
+			_99.setup({
+				logger = {
+					level = _99.DEBUG,
+					path = "/tmp/" .. basename .. ".99.debug",
+					print_on_error = true,
+				},
+        model = "github-copilot/gpt-5.2-codex",
+
+                --- A new feature that is centered around tags
+                completion = {
+                    --- Defaults to .cursor/rules
+                    -- I am going to disable these until i understand the
+                    -- problem better.  Inside of cursor rules there is also
+                    -- application rules, which means i need to apply these
+                    -- differently
+                    -- cursor_rules = "<custom path to cursor rules>"
+
+                    --- A list of folders where you have your own SKILL.md
+                    --- Expected format:
+                    --- /path/to/dir/<skill_name>/SKILL.md
+                    ---
+                    --- Example:
+                    --- Input Path:
+                    --- "scratch/custom_rules/"
+                    ---
+                    --- Output Rules:
+                    --- {path = "scratch/custom_rules/vim/SKILL.md", name = "vim"},
+                    --- ... the other rules in that dir ...
+                    ---
+                    custom_rules = {
+                      "scratch/custom_rules/",
+                    },
+
+                    --- What autocomplete do you use.  We currently only
+                    --- support cmp right now
+                    source = "cmp",
+                },
+
+                --- WARNING: if you change cwd then this is likely broken
+                --- ill likely fix this in a later change
+                ---
+                --- md_files is a list of files to look for and auto add based on the location
+                --- of the originating request.  That means if you are at /foo/bar/baz.lua
+                --- the system will automagically look for:
+                --- /foo/bar/AGENT.md
+                --- /foo/AGENT.md
+                --- assuming that /foo is project root (based on cwd)
+				md_files = {
+					"AGENT.md",
+				},
+			})
+
+            -- Create your own short cuts for the different types of actions
+			vim.keymap.set("n", "<leader>9f", function()
+				_99.fill_in_function()
+			end)
+            -- take extra note that i have visual selection only in v mode
+            -- technically whatever your last visual selection is, will be used
+            -- so i have this set to visual mode so i dont screw up and use an
+            -- old visual selection
+            --
+            -- likely ill add a mode check and assert on required visual mode
+            -- so just prepare for it now
+			vim.keymap.set("v", "<leader>9v", function()
+				_99.visual()
+			end)
+
+            --- if you have a request you dont want to make any changes, just cancel it
+			vim.keymap.set("v", "<leader>9s", function()
+				_99.stop_all_requests()
+			end)
+
+            --- Example: Using rules + actions for custom behaviors
+            --- Create a rule file like ~/.rules/debug.md that defines custom behavior.
+            --- For instance, a "debug" rule could automatically add printf statements
+            --- throughout a function to help debug its execution flow.
+			vim.keymap.set("n", "<leader>9fd", function()
+				_99.fill_in_function()
+			end)
+		end,
+	},
   'tpope/vim-sleuth', -- Detect tabstop and shiftwidth automatically
   'tpope/vim-fugitive',
 
@@ -530,8 +627,8 @@ require('lazy').setup({
       -- Useful status updates for LSP.
       { 'j-hui/fidget.nvim', opts = {} },
 
-      -- Allows extra capabilities provided by blink.cmp
-      'saghen/blink.cmp',
+      -- Allows extra capabilities provided by nvim-cmp
+      'hrsh7th/cmp-nvim-lsp',
     },
     config = function()
       -- Brief aside: **What is LSP?**
@@ -701,9 +798,9 @@ require('lazy').setup({
 
       -- LSP servers and clients are able to communicate to each other what features they support.
       --  By default, Neovim doesn't support everything that is in the LSP specification.
-      --  When you add blink.cmp, luasnip, etc. Neovim now has *more* capabilities.
-      --  So, we create new capabilities with blink.cmp, and then broadcast that to the servers.
-      local capabilities = require('blink.cmp').get_lsp_capabilities()
+      --  When you add nvim-cmp, luasnip, etc. Neovim now has *more* capabilities.
+      --  So, we create new capabilities with cmp_nvim_lsp, and then broadcast that to the servers.
+      local capabilities = require('cmp_nvim_lsp').default_capabilities()
 
       -- Enable the following language servers
       --  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
@@ -788,103 +885,91 @@ require('lazy').setup({
     end,
   },
 
-  { -- Autocompletion
-    'saghen/blink.cmp',
-    event = 'VimEnter',
-    version = '1.*',
-    dependencies = {
-      -- Snippet Engine
-      {
-        'L3MON4D3/LuaSnip',
-        version = '2.*',
-        build = (function()
-          -- Build Step is needed for regex support in snippets.
-          -- This step is not supported in many windows environments.
-          -- Remove the below condition to re-enable on windows.
-          if vim.fn.has 'win32' == 1 or vim.fn.executable 'make' == 0 then
-            return
-          end
-          return 'make install_jsregexp'
-        end)(),
-        dependencies = {
-          -- `friendly-snippets` contains a variety of premade snippets.
-          --    See the README about individual language/framework/plugin snippets:
-          --    https://github.com/rafamadriz/friendly-snippets
-          -- {
-          --   'rafamadriz/friendly-snippets',
-          --   config = function()
-          --     require('luasnip.loaders.from_vscode').lazy_load()
-          --   end,
-          -- },
-        },
-        opts = {},
-      },
-      'folke/lazydev.nvim',
-    },
-    --- @module 'blink.cmp'
-    --- @type blink.cmp.Config
+  -- Tabs at the top like VS Code
+  {
+    'akinsho/bufferline.nvim',
+    version = "*",
+    dependencies = 'nvim-tree/nvim-web-devicons',
     opts = {
-      keymap = {
-        -- 'default' (recommended) for mappings similar to built-in completions
-        --   <c-y> to accept ([y]es) the completion.
-        --    This will auto-import if your LSP supports it.
-        --    This will expand snippets if the LSP sent a snippet.
-        -- 'super-tab' for tab to accept
-        -- 'enter' for enter to accept
-        -- 'none' for no mappings
-        --
-        -- For an understanding of why the 'default' preset is recommended,
-        -- you will need to read `:help ins-completion`
-        --
-        -- No, but seriously. Please read `:help ins-completion`, it is really good!
-        --
-        -- All presets have the following mappings:
-        -- <tab>/<s-tab>: move to right/left of your snippet expansion
-        -- <c-space>: Open menu or open docs if already open
-        -- <c-n>/<c-p> or <up>/<down>: Select next/previous item
-        -- <c-e>: Hide menu
-        -- <c-k>: Toggle signature help
-        --
-        -- See :h blink-cmp-config-keymap for defining your own keymap
-        preset = 'super-tab',
-
-        -- For more advanced Luasnip keymaps (e.g. selecting choice nodes, expansion) see:
-        --    https://github.com/L3MON4D3/LuaSnip?tab=readme-ov-file#keymaps
-      },
-
-      appearance = {
-        -- 'mono' (default) for 'Nerd Font Mono' or 'normal' for 'Nerd Font'
-        -- Adjusts spacing to ensure icons are aligned
-        nerd_font_variant = 'mono',
-      },
-
-      completion = {
-        -- By default, you may press `<c-space>` to show the documentation.
-        -- Optionally, set `auto_show = true` to show the documentation after a delay.
-        documentation = { auto_show = false, auto_show_delay_ms = 500, window = { border = 'single' }},
-        menu = { border = 'single' },
-      },
-
-      sources = {
-        default = { 'lsp', 'path', 'snippets', 'lazydev' },
-        providers = {
-          lazydev = { module = 'lazydev.integrations.blink', score_offset = 100 },
+      options = {
+        mode = "buffers",
+        separator_style = "slant",
+        show_buffer_close_icons = true,
+        show_close_icon = false,
+        diagnostics = "nvim_lsp",
+        always_show_bufferline = true,
+        offsets = {
+          {
+            filetype = "neo-tree",
+            text = "File Explorer",
+            highlight = "Directory",
+            separator = true,
+          },
         },
       },
+    },
+  },
 
-      snippets = { preset = 'luasnip' },
+  -- Scrollbar with git changes and diagnostics (like VS Code minimap indicators)
+  {
+    'lewis6991/satellite.nvim',
+    opts = {
+      current_only = false,
+      winblend = 50,
+      handlers = {
+        cursor = { enable = true },
+        search = { enable = true },
+        diagnostic = { enable = true },
+        gitsigns = { enable = true },
+        marks = { enable = true },
+      },
+    },
+  },
 
-      -- Blink.cmp includes an optional, recommended rust fuzzy matcher,
-      -- which automatically downloads a prebuilt binary when enabled.
-      --
-      -- By default, we use the Lua implementation instead, but you may enable
-      -- the rust implementation via `'prefer_rust_with_warning'`
-      --
-      -- See :h blink-cmp-config-fuzzy for more information
-      fuzzy = { implementation = 'lua' },
+  {
+    "hrsh7th/nvim-cmp",
+    dependencies = {
+      "hrsh7th/cmp-nvim-lsp",
+      "hrsh7th/cmp-buffer",
+      "hrsh7th/cmp-path",
+    },
+    config = function()
+      local cmp = require("cmp")
+      cmp.setup({
+        sources = cmp.config.sources({
+          { name = "nvim_lsp" },
+          { name = "buffer" },
+          { name = "path" },
+        }),
+        mapping = cmp.mapping.preset.insert({
+          ["<C-n>"] = cmp.mapping.select_next_item(),
+          ["<C-p>"] = cmp.mapping.select_prev_item(),
+          ["<C-y>"] = cmp.mapping.confirm({ select = true }),
+          ["<Tab>"] = cmp.mapping.confirm({ select = true }),
+          ["<C-Space>"] = cmp.mapping.complete(),
+          ["<C-e>"] = cmp.mapping.abort(),
+        }),
+        window = {
+          completion = cmp.config.window.bordered({ border = 'single' }),
+          documentation = cmp.config.window.bordered({ border = 'single' }),
+        },
+      })
+    end,
+  },
 
-      -- Shows a signature help window while you type arguments for a function
-      signature = { enabled = true,  window = { border = 'single' } },
+  -- Signature help in a floating window (like blink.cmp had)
+  {
+    "ray-x/lsp_signature.nvim",
+    event = "VeryLazy",
+    opts = {
+      bind = true,
+      border = "single",
+      floating_window = true,
+      floating_window_above_cur_line = true,
+      hint_enable = false, -- disable virtual text hints
+      handler_opts = {
+        border = "single",
+      },
     },
   },
 
@@ -1026,7 +1111,7 @@ require('lazy').setup({
   -- require 'kickstart.plugins.lint',
   -- require 'kickstart.plugins.autopairs',
   require 'kickstart.plugins.neo-tree',
-  -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
+  require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
   require 'kickstart.plugins.none-ls',
   require 'kickstart.plugins.fugitive',
 
