@@ -1001,6 +1001,20 @@ require('lazy').setup({
     --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
   },
 
+  -- Keep the current function/class context visible at the top
+  {
+    'nvim-treesitter/nvim-treesitter-context',
+    opts = {
+      multiwindow = true,
+      enable = true,
+      max_lines = 0,
+      multiline_threshold = 1,
+      trim_scope = 'outer',
+      mode = 'cursor',
+      separator = nil,
+    },
+  },
+
   -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
   -- init.lua. If you want these files, they are in the repository, so you can just download them and
   -- place them in the correct locations.
