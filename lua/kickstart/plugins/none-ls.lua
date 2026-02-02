@@ -26,6 +26,9 @@ return {
 
     -- Setup the remote pylsp
     lspconfig.remote_pylsp.setup {
+      flags = {
+        debounce_text_changes = 150,
+      },
       on_attach = function(client, bufnr)
         if client.supports_method 'textDocument/formatting' then
           vim.api.nvim_clear_autocmds { group = augroup, buffer = bufnr }
@@ -34,6 +37,15 @@ return {
             buffer = bufnr,
             callback = function()
               vim.lsp.buf.format { async = false }
+            end,
+          })
+
+          -- Format on common change events (exit insert mode, paste/cut edits)
+          vim.api.nvim_create_autocmd({ 'InsertLeave', 'TextChanged' }, {
+            group = augroup,
+            buffer = bufnr,
+            callback = function()
+              vim.lsp.buf.format { async = true }
             end,
           })
         end
@@ -54,6 +66,13 @@ return {
               enabled = true,
               live_mode = true,
             },
+            -- Disable overlapping or slower default plugins to reduce latency
+            pycodestyle = { enabled = false },
+            pyflakes = { enabled = false },
+            mccabe = { enabled = false },
+            pylint = { enabled = false },
+            autopep8 = { enabled = false },
+            yapf = { enabled = false },
           },
         },
       },
