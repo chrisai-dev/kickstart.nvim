@@ -37,12 +37,18 @@ return {
             end,
           })
         end
+
+        -- Apply standard LSP keymaps/highlights for remote clients
+        require('utils.lsp_on_attach').apply(bufnr, client)
       end,
       settings = {
         pylsp = {
           plugins = {
             ruff = {
+              enabled = true,
+              formatEnabled = true,
               executable = '/usr/local/bin/ruff',
+              format = {'I' },
             },
             pylsp_mypy = {
               enabled = true,
