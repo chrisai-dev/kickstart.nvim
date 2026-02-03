@@ -226,6 +226,12 @@ vim.keymap.set('n', '<S-l>', ':bnext<CR>', { desc = 'Next buffer' })
 vim.keymap.set('n', '<S-h>', ':bprev<CR>', { desc = 'Previous buffer' })
 vim.keymap.set('n', '<leader>x', ':bdelete<CR>', { desc = 'Close buffer' })
 
+-- Method/function navigation remaps
+vim.keymap.set('n', '<leader>K', function() vim.cmd('normal [mzz') end, { desc = 'Jump to previous method start' })
+vim.keymap.set('n', '<leader>J', function() vim.cmd('normal [Mzz') end, { desc = 'Jump to previous method end' })
+vim.keymap.set('n', '<leader>k', function() vim.cmd('normal ]mzz') end, { desc = 'Jump to next method start' })
+vim.keymap.set('n', '<leader>j', function() vim.cmd('normal ]Mzz') end, { desc = 'Jump to next method end' })
+
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
 
