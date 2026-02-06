@@ -27,16 +27,34 @@ return {
     vim.api.nvim_create_autocmd('FileType', {
       pattern = 'fugitive',
       callback = function()
-        vim.cmd('resize 15')  -- Set the height to 15 lines, adjust as desired
+        vim.cmd('resize 10')  -- Set the height to 15 lines, adjust as desired
         vim.keymap.set('n', '<CR>', function()
           local line = vim.fn.getline('.')
           local file = line:match('%s+([^%s]+)$')
           if file then
+            for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+              if vim.api.nvim_buf_is_loaded(buf) then
+                local name = vim.api.nvim_buf_get_name(buf)
+                if name:match('^.*//diff') then
+                  vim.api.nvim_buf_delete(buf, { force = true })
+                end
+              end
+            end
             vim.cmd('Gedit ' .. file)
             vim.cmd('Gdiffsplit')
             vim.cmd('wincmd l')
           end
         end, { buffer = true, desc = 'Open diff for file' })
+      end,
+    })
+
+    -- Diff hunk navigation with centering in diff views
+    vim.api.nvim_create_autocmd('BufEnter', {
+      callback = function()
+        if vim.wo.diff then
+          vim.keymap.set('n', '<leader><Down>', ']czz', { buffer = true, desc = 'Next hunk and center' })
+          vim.keymap.set('n', '<leader><Up>', '[czz', { buffer = true, desc = 'Prev hunk and center' })
+        end
       end,
     })
   end,

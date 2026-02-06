@@ -218,6 +218,10 @@ vim.keymap.set('n', '<C-d>', '<C-d>zz', { desc = 'Move half page down and center
 vim.keymap.set('n', '{', '{zz', { desc = 'Jump to previous block start and center' })
 vim.keymap.set('n', '}', '}zz', { desc = 'Jump to previous block end and center' })
 
+-- Move lines up/down
+vim.keymap.set('v', '<leader>mj', ":m '>+1<CR>gv=gv", { desc = 'Move selection down' })
+vim.keymap.set('v', '<leader>mk', ":m '<-2<CR>gv=gv", { desc = 'Move selection up' })
+
 vim.keymap.set('x', '<Tab>', '>gv', { desc = 'Indent right and reselect' })
 vim.keymap.set('x', '<S-Tab>', '<gv', { desc = 'Indent left and reselect' })
 vim.keymap.set('n', '<C-a>', "maggVG\"+y", { desc = 'Yank All (entire buffer, no move)' })
