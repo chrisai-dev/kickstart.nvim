@@ -52,8 +52,8 @@ return {
     vim.api.nvim_create_autocmd('BufEnter', {
       callback = function()
         if vim.wo.diff then
-          vim.keymap.set('n', '<leader><Down>', ']czz', { buffer = true, desc = 'Next hunk and center' })
-          vim.keymap.set('n', '<leader><Up>', '[czz', { buffer = true, desc = 'Prev hunk and center' })
+          vim.keymap.set('n', '<C-n>', ']czz', { buffer = true, desc = 'Next hunk and center' })
+          vim.keymap.set('n', '<C-p>', '[czz', { buffer = true, desc = 'Prev hunk and center' })
         end
       end,
     })
