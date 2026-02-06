@@ -18,7 +18,7 @@ return {
     'nvim-neotest/nvim-nio',
 
     -- Installs the debug adapters for you
-    'williamboman/mason.nvim',
+    'mason-org/mason.nvim',
     'jay-babu/mason-nvim-dap.nvim',
 
     -- Add your own debuggers here
@@ -29,9 +29,7 @@ return {
     -- Basic debugging keymaps, feel free to change to your liking!
     {
       '<F5>',
-      function()
-        require('dap').continue()
-      end,
+      function() require('dap').continue() end,
       desc = 'Debug: Start/Continue',
     },
     {
@@ -64,17 +62,13 @@ return {
     },
     {
       '<leader>B',
-      function()
-        require('dap').set_breakpoint(vim.fn.input 'Breakpoint condition: ')
-      end,
+      function() require('dap').set_breakpoint(vim.fn.input 'Breakpoint condition: ') end,
       desc = 'Debug: Set Breakpoint',
     },
     -- Toggle to see last session result. Without this, you can't see session output in case of unhandled exception.
     {
       '<F7>',
-      function()
-        require('dapui').toggle()
-      end,
+      function() require('dapui').toggle() end,
       desc = 'Debug: See last session result.',
     },
   },

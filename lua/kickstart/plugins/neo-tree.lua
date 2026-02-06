@@ -9,7 +9,7 @@ return {
     'nvim-tree/nvim-web-devicons', -- not strictly required, but recommended
     'MunifTanjim/nui.nvim',
   },
-  cmd = 'Neotree',
+  lazy = false,
   keys = {
     { '\\', ':lua require("utils.gitutils").cleanup_git_buffers()<CR>:Neotree reveal<CR>', desc = 'NeoTree reveal', silent = true },
   },
