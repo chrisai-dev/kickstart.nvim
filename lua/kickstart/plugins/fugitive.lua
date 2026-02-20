@@ -6,7 +6,10 @@ return {
 
     -- Keymaps
     vim.keymap.set('n', '<leader>gs', ':Git<CR>', { desc = '[G]it [S]tatus' })
-    vim.keymap.set('n', '<leader>gc', ':Git commit<CR>', { desc = '[G]it [C]ommit' })
+    vim.keymap.set('n', '<leader>gc', function()
+      cleanup_git_buffers()
+      vim.cmd('Git commit')
+    end, { desc = '[G]it [C]ommit' })
     vim.keymap.set('n', '<leader>gp', ':Git push<CR>', { desc = '[G]it [P]ush' })
     vim.keymap.set('n', '<leader>gl', ':Git pull<CR>', { desc = '[G]it [L]oad/Pull' })
     vim.keymap.set('n', '<leader>gb', ':Git blame<CR>', { desc = '[G]it [B]lame' })
