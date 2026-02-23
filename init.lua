@@ -308,6 +308,7 @@ require('lazy').setup({
 
   {
 		"ThePrimeagen/99",
+    commit = "96f3682ea890a3f2037aafa253c92d0dd3b82161",
 		config = function()
 			local _99 = require("99")
 
@@ -322,7 +323,7 @@ require('lazy').setup({
 					path = "/tmp/" .. basename .. ".99.debug",
 					print_on_error = true,
 				},
-        model = "github-copilot/gpt-5.2-codex",
+        model = "github-copilot/gemini-3.1-pro-preview", -- "github-copilot/gpt-5.2-codex",
 
                 --- A new feature that is centered around tags
                 completion = {
